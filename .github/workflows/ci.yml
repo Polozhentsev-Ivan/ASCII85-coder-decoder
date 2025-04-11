@@ -12,7 +12,7 @@ jobs:
       - name: Setup
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential make libgtest-dev g++-11
+          sudo apt-get install -y build-essential make libgtest-dev g++-11 python3
           sudo ln -sf /usr/bin/g++-11 /usr/bin/g++
 
       - name: Build
@@ -23,3 +23,4 @@ jobs:
         run: |
           make test
           ./ascii85_test
+          python3 test_ascii85.py

@@ -3,6 +3,7 @@
 #include <string>
 #include <cstring>
 #include <cstdint>
+#include <fstream>
 
 const uint32_t ASCII85_BASE = 85;
 const char ASCII85_OFFSET = '!';
@@ -131,26 +132,83 @@ void printUsage() {
     std::cerr << "  -e, --encode    кодирует данные (это режим по умолчанию)" << std::endl;
     std::cerr << "  -d, --decode    декодирует данные" << std::endl;
     std::cerr << "  -h, --help      показывает эту справку и выходит" << std::endl;
+    std::cerr << std::endl;
+    std::cerr << "Использование для работы с файлами:" << std::endl;
+    std::cerr << "  ascii85 encode input_file output_file" << std::endl;
+    std::cerr << "  ascii85 decode input_file output_file" << std::endl;
 }
 
 int main(int argc, char* argv[]) {
     bool encodeMode = true;
+    std::string command;
     
-    if (argc > 1) {
-        if (strcmp(argv[1], "-d") == 0 || strcmp(argv[1], "--decode") == 0) {
-            encodeMode = false;
-        } else if (strcmp(argv[1], "-e") == 0 || strcmp(argv[1], "--encode") == 0) {
-            encodeMode = true;
-        } else if (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0) {
-            printUsage();
-            return 0;
-        } else {
-            std::cerr << "Неизвестная опция: " << argv[1] << std::endl;
-            printUsage();
+    if (argc < 2) {
+        printUsage();
+        return 1;
+    }
+
+    command = argv[1];
+    
+    if (command == "-d" || command == "--decode") {
+        encodeMode = false;
+    } else if (command == "-e" || command == "--encode") {
+        encodeMode = true;
+    } else if (command == "-h" || command == "--help") {
+        printUsage();
+        return 0;
+    } else if (command == "encode") {
+        encodeMode = true;
+        
+        if (argc != 4) {
+            std::cerr << "Использование для кодирования: ascii85 encode input_file output_file" << std::endl;
             return 1;
         }
+        
+        std::ifstream input(argv[2], std::ios::binary);
+        if (!input) {
+            std::cerr << "Ошибка открытия входного файла: " << argv[2] << std::endl;
+            return 1;
+        }
+        
+        std::ofstream output(argv[3], std::ios::binary);
+        if (!output) {
+            std::cerr << "Ошибка открытия выходного файла: " << argv[3] << std::endl;
+            return 1;
+        }
+        
+        encode(input, output);
+        return 0;
+    } else if (command == "decode") {
+        encodeMode = false;
+        
+        if (argc != 4) {
+            std::cerr << "Использование для декодирования: ascii85 decode input_file output_file" << std::endl;
+            return 1;
+        }
+        
+        std::ifstream input(argv[2], std::ios::binary);
+        if (!input) {
+            std::cerr << "Ошибка открытия входного файла: " << argv[2] << std::endl;
+            return 1;
+        }
+        
+        std::ofstream output(argv[3], std::ios::binary);
+        if (!output) {
+            std::cerr << "Ошибка открытия выходного файла: " << argv[3] << std::endl;
+            return 1;
+        }
+        
+        if (!decode(input, output)) {
+            return 1;
+        }
+        return 0;
+    } else {
+        std::cerr << "Неизвестная команда: " << command << std::endl;
+        printUsage();
+        return 1;
     }
     
+    // Обработка стандартного режима (ввод из stdin, вывод в stdout)
     std::ios_base::sync_with_stdio(false);
     std::cin.unsetf(std::ios::skipws);
 
