@@ -1,0 +1,25 @@
+name: "Build and Test"
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    name: Setup&Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential make libgtest-dev g++-11
+          sudo ln -sf /usr/bin/g++-11 /usr/bin/g++
+
+      - name: Build
+        run: |
+          make
+          timeout 5s ./ascii85 || true
+      - name: Test
+        run: |
+          make test
+          ./ascii85_test
